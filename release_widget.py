@@ -48,14 +48,25 @@ class ReleaseCard(tk.Frame):
         }
         row = len(self.loadouts)
 
+        # Create loadout input fields with labels
         tk.Label(self.loadouts_frame, text="Loadout Date:", font=("Arial", 10)).grid(row=row, column=0, padx=5, pady=2, sticky="w")
         tk.Entry(self.loadouts_frame, textvariable=loadout["date"], font=("Arial", 10), width=15).grid(row=row, column=1, padx=5, pady=2)
 
         tk.Label(self.loadouts_frame, text="Joints:", font=("Arial", 10)).grid(row=row, column=2, padx=5, pady=2, sticky="w")
-        tk.Entry(self.loadouts_frame, textvariable=loadout["joints"], font=("Arial", 10), width=10).grid(row=row, column=3, padx=5, pady=2)
+        
+        # Split declaration and layout of joints_entry
+        joints_entry = tk.Entry(self.loadouts_frame, textvariable=loadout["joints"], font=("Arial", 10), width=10)
+        joints_entry.grid(row=row, column=3, padx=5, pady=2)
 
         tk.Label(self.loadouts_frame, text="Footage:", font=("Arial", 10)).grid(row=row, column=4, padx=5, pady=2, sticky="w")
-        tk.Entry(self.loadouts_frame, textvariable=loadout["footage"], font=("Arial", 10), width=10).grid(row=row, column=5, padx=5, pady=2)
+        
+        # Split declaration and layout of footage_entry
+        footage_entry = tk.Entry(self.loadouts_frame, textvariable=loadout["footage"], font=("Arial", 10), width=10)
+        footage_entry.grid(row=row, column=5, padx=5, pady=2)
+
+        # Bind the <KeyRelease> event to both Entry widgets to update the remaining values when modified
+        joints_entry.bind("<KeyRelease>", lambda event: self.update_remaining_values())
+        footage_entry.bind("<KeyRelease>", lambda event: self.update_remaining_values())
 
         self.loadouts.append(loadout)
 
