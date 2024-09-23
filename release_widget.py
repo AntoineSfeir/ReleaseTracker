@@ -1,9 +1,10 @@
 import tkinter as tk
-from tkinter import ttk  # Themed widgets
+from tkinter import ttk
+from tkcalendar import DateEntry  # Import the DateEntry widget from tkcalendar
 
 class ReleaseCard(tk.Frame):
     def __init__(self, parent, release_number, date, joints, footage, on_remove):
-        super().__init__(parent, padx=10, pady=10, bd=2, relief="groove", bg="#ffffff")  # Add border and background color
+        super().__init__(parent, padx=10, pady=10, bd=2, relief="groove", bg="#ffffff")
         self.release_number = tk.StringVar(value=release_number)
         self.date = tk.StringVar(value=date)
         self.joints = tk.IntVar(value=joints)
@@ -15,7 +16,9 @@ class ReleaseCard(tk.Frame):
         tk.Entry(self, textvariable=self.release_number, font=("Arial", 12), width=25).grid(row=0, column=1, padx=5, pady=5)
 
         tk.Label(self, text="Date:", font=("Arial", 12), bg="#ffffff").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        tk.Entry(self, textvariable=self.date, font=("Arial", 12), width=25).grid(row=1, column=1, padx=5, pady=5)
+        # Use DateEntry for picking a date from a calendar
+        self.date_entry = DateEntry(self, textvariable=self.date, font=("Arial", 12), width=25, date_pattern='yyyy-mm-dd')
+        self.date_entry.grid(row=1, column=1, padx=5, pady=5)
 
         tk.Label(self, text="Total Joints:", font=("Arial", 12), bg="#ffffff").grid(row=2, column=0, padx=5, pady=5, sticky="w")
         tk.Entry(self, textvariable=self.joints, font=("Arial", 12), width=25).grid(row=2, column=1, padx=5, pady=5)
@@ -51,7 +54,7 @@ class ReleaseCard(tk.Frame):
 
         # Create loadout input fields with labels
         tk.Label(self.loadouts_frame, text="Loadout Date:", font=("Arial", 10), bg="#ffffff").grid(row=row, column=0, padx=5, pady=2, sticky="w")
-        loadout_date_entry = tk.Entry(self.loadouts_frame, textvariable=loadout["date"], font=("Arial", 10), width=15)
+        loadout_date_entry = DateEntry(self.loadouts_frame, textvariable=loadout["date"], font=("Arial", 10), width=15, date_pattern='yyyy-mm-dd')
         loadout_date_entry.grid(row=row, column=1, padx=5, pady=2)
 
         tk.Label(self.loadouts_frame, text="Joints:", font=("Arial", 10), bg="#ffffff").grid(row=row, column=2, padx=5, pady=2, sticky="w")
@@ -62,12 +65,10 @@ class ReleaseCard(tk.Frame):
         footage_entry = tk.Entry(self.loadouts_frame, textvariable=loadout["footage"], font=("Arial", 10), width=10)
         footage_entry.grid(row=row, column=5, padx=5, pady=2)
 
-        # Bind the <KeyRelease> and <FocusOut> events to update remaining values dynamically
+        # Bind events to update remaining values
         joints_entry.bind("<KeyRelease>", lambda event: self.update_remaining_values())
         footage_entry.bind("<KeyRelease>", lambda event: self.update_remaining_values())
         loadout_date_entry.bind("<FocusOut>", lambda event: self.update_remaining_values())
-        joints_entry.bind("<FocusOut>", lambda event: self.update_remaining_values())
-        footage_entry.bind("<FocusOut>", lambda event: self.update_remaining_values())
 
         # Add a Remove Loadout button
         remove_button = tk.Button(
@@ -86,51 +87,11 @@ class ReleaseCard(tk.Frame):
         self.update_remaining_values()
 
     def remove_loadout(self, loadout, row):
-        # Remove loadout from the list
         if loadout in self.loadouts:
             self.loadouts.remove(loadout)
-            # Clear the entries in the grid
             for widget in self.loadouts_frame.grid_slaves(row=row):
                 widget.destroy()
-            # Re-add remaining loadouts to update the layout
-            for i, loadout in enumerate(self.loadouts):
-                for widget in self.loadouts_frame.grid_slaves(row=i):
-                    widget.destroy()
-                self.readd_loadout(i, loadout)
-            # Update the remaining values
             self.update_remaining_values()
-
-    def readd_loadout(self, row, loadout):
-        # Recreate the loadout widgets after removal
-        tk.Label(self.loadouts_frame, text="Loadout Date:", font=("Arial", 10), bg="#ffffff").grid(row=row, column=0, padx=5, pady=2, sticky="w")
-        loadout_date_entry = tk.Entry(self.loadouts_frame, textvariable=loadout["date"], font=("Arial", 10), width=15)
-        loadout_date_entry.grid(row=row, column=1, padx=5, pady=2)
-
-        tk.Label(self.loadouts_frame, text="Joints:", font=("Arial", 10), bg="#ffffff").grid(row=row, column=2, padx=5, pady=2, sticky="w")
-        joints_entry = tk.Entry(self.loadouts_frame, textvariable=loadout["joints"], font=("Arial", 10), width=10)
-        joints_entry.grid(row=row, column=3, padx=5, pady=2)
-
-        tk.Label(self.loadouts_frame, text="Footage:", font=("Arial", 10), bg="#ffffff").grid(row=row, column=4, padx=5, pady=2, sticky="w")
-        footage_entry = tk.Entry(self.loadouts_frame, textvariable=loadout["footage"], font=("Arial", 10), width=10)
-        footage_entry.grid(row=row, column=5, padx=5, pady=2)
-
-        # Bind the <KeyRelease> and <FocusOut> events to update remaining values dynamically
-        joints_entry.bind("<KeyRelease>", lambda event: self.update_remaining_values())
-        footage_entry.bind("<KeyRelease>", lambda event: self.update_remaining_values())
-        loadout_date_entry.bind("<FocusOut>", lambda event: self.update_remaining_values())
-        joints_entry.bind("<FocusOut>", lambda event: self.update_remaining_values())
-        footage_entry.bind("<FocusOut>", lambda event: self.update_remaining_values())
-
-        # Add a Remove Loadout button
-        remove_button = tk.Button(
-            self.loadouts_frame,
-            text="Remove",
-            command=lambda: self.remove_loadout(loadout, row),
-            font=("Arial", 10),
-            bg="red",
-            fg="white"
-        )
-        remove_button.grid(row=row, column=6, padx=5, pady=2)
 
     def get_loadouts(self):
         return [
@@ -143,18 +104,14 @@ class ReleaseCard(tk.Frame):
         ]
 
     def update_remaining_values(self):
-        # Calculate total loadout joints and footage
         total_loadout_joints = sum(loadout["joints"].get() for loadout in self.loadouts)
         total_loadout_footage = sum(loadout["footage"].get() for loadout in self.loadouts)
 
-        # Calculate remaining joints and footage
         remaining_joints = self.joints.get() - total_loadout_joints
         remaining_footage = self.footage.get() - total_loadout_footage
 
-        # Ensure that remaining values do not go below zero
         remaining_joints = max(remaining_joints, 0)
         remaining_footage = max(remaining_footage, 0.0)
 
-        # Update labels with the remaining values
         self.remaining_joints_label.config(text=f"Remaining Joints: {remaining_joints}")
         self.remaining_footage_label.config(text=f"Remaining Footage: {remaining_footage:.2f}")
