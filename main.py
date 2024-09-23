@@ -39,20 +39,33 @@ class ReleaseTrackerApp(tk.Tk):
         self.releases_frame.pack(fill=tk.BOTH, expand=True)
 
         # Add a scrollbar to the releases frame
-        canvas = tk.Canvas(self.releases_frame)
-        scrollbar = tk.Scrollbar(self.releases_frame, orient="vertical", command=canvas.yview)
-        self.scrollable_frame = tk.Frame(canvas)
+        self.canvas = tk.Canvas(self.releases_frame)  # Save canvas as self.canvas
+        scrollbar = tk.Scrollbar(self.releases_frame, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = tk.Frame(self.canvas)
 
         self.scrollable_frame.bind(
             "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         )
 
-        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=scrollbar.set)
 
-        canvas.pack(side="left", fill="both", expand=True)
+        self.canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+
+        # Bind mouse wheel scrolling
+        self.bind_mouse_scroll()
+
+    def bind_mouse_scroll(self):
+        """Binds mouse wheel scrolling to the canvas."""
+        if self.tk.call('tk', 'windowingsystem') == 'win32':
+            # Windows platform
+            self.canvas.bind_all("<MouseWheel>", lambda event: self.canvas.yview_scroll(-int(event.delta / 120), "units"))
+        else:
+            # Linux and macOS platforms
+            self.canvas.bind_all("<Button-4>", lambda event: self.canvas.yview_scroll(-1, "units"))
+            self.canvas.bind_all("<Button-5>", lambda event: self.canvas.yview_scroll(1, "units"))
 
     def add_release(self, release_number="", date="", joints=0, footage=0.0):
         # Create a new release card and add it to the list
