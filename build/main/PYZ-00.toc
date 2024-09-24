@@ -1,4 +1,4 @@
-('C:\\Users\\edbau\\OneDrive\\Desktop\\ReleaseTracker\\build\\main\\PYZ-00.pyz',
+('C:\\Users\\edbau\\OneDrive\\Documents\\GitHub\\ReleaseTracker\\build\\main\\PYZ-00.pyz',
  [('_compat_pickle',
    'C:\\Program '
    'Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.1776.0_x64__qbz5n2kfra8p0\\Lib\\_compat_pickle.py',
@@ -324,7 +324,7 @@
    'Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.1776.0_x64__qbz5n2kfra8p0\\Lib\\random.py',
    'PYMODULE'),
   ('release_widget',
-   'C:\\Users\\edbau\\OneDrive\\Desktop\\ReleaseTracker\\release_widget.py',
+   'C:\\Users\\edbau\\OneDrive\\Documents\\GitHub\\ReleaseTracker\\release_widget.py',
    'PYMODULE'),
   ('selectors',
    'C:\\Program '
