@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
-from tkcalendar import DateEntry  # Import the DateEntry widget from tkcalendar
+from tkcalendar import DateEntry
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class ReleaseCard(tk.Frame):
     def __init__(self, parent, release_number, date, joints, footage, on_remove):
@@ -16,7 +18,6 @@ class ReleaseCard(tk.Frame):
         tk.Entry(self, textvariable=self.release_number, font=("Arial", 12), width=25).grid(row=0, column=1, padx=5, pady=5)
 
         tk.Label(self, text="Date:", font=("Arial", 12), bg="#ffffff").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        # Use DateEntry for picking a date from a calendar
         self.date_entry = DateEntry(self, textvariable=self.date, font=("Arial", 12), width=25, date_pattern='yyyy-mm-dd')
         self.date_entry.grid(row=1, column=1, padx=5, pady=5)
 
@@ -33,7 +34,7 @@ class ReleaseCard(tk.Frame):
         self.remaining_footage_label = tk.Label(self, text="Remaining Footage: ", font=("Arial", 12, "bold"), bg="#ffffff")
         self.remaining_footage_label.grid(row=5, column=0, padx=5, pady=5, sticky="w", columnspan=2)
 
-        # Buttons
+        # Add buttons
         tk.Button(self, text="Add Loadout", command=self.add_loadout, font=("Arial", 12), width=15, bg="#4CAF50", fg="white").grid(row=6, column=0, padx=5, pady=5)
         tk.Button(self, text="Remove Release", command=lambda: on_remove(self), font=("Arial", 12), width=15, bg="red", fg="white").grid(row=6, column=1, padx=5, pady=5)
 
@@ -41,8 +42,13 @@ class ReleaseCard(tk.Frame):
         self.loadouts_frame = tk.Frame(self, bg="#ffffff")
         self.loadouts_frame.grid(row=7, column=0, columnspan=2, pady=10)
 
-        # Initialize remaining values
+        # Chart area
+        self.chart_frame = tk.Frame(self, bg="#ffffff")
+        self.chart_frame.grid(row=8, column=0, columnspan=2)
+
+        # Initialize remaining values and chart
         self.update_remaining_values()
+        self.draw_chart()
 
     def add_loadout(self, date="", joints=0, footage=0.0):
         loadout = {
@@ -85,6 +91,7 @@ class ReleaseCard(tk.Frame):
 
         # Update the remaining values when a new loadout is added
         self.update_remaining_values()
+        self.draw_chart()
 
     def remove_loadout(self, loadout, row):
         if loadout in self.loadouts:
@@ -92,6 +99,7 @@ class ReleaseCard(tk.Frame):
             for widget in self.loadouts_frame.grid_slaves(row=row):
                 widget.destroy()
             self.update_remaining_values()
+            self.draw_chart()
 
     def get_loadouts(self):
         return [
@@ -115,3 +123,34 @@ class ReleaseCard(tk.Frame):
 
         self.remaining_joints_label.config(text=f"Remaining Joints: {remaining_joints}")
         self.remaining_footage_label.config(text=f"Remaining Footage: {remaining_footage:.2f}")
+
+    def draw_chart(self):
+        for widget in self.chart_frame.winfo_children():
+            widget.destroy()  # Clear previous chart
+        
+        fig, axs = plt.subplots(1, 2, figsize=(6, 3))
+
+        # Data for joints pie chart
+        total_joints = self.joints.get()
+        remaining_joints = max(self.joints.get() - sum(loadout["joints"].get() for loadout in self.loadouts), 0)
+        used_joints = total_joints - remaining_joints
+
+        # Data for footage pie chart
+        total_footage = self.footage.get()
+        remaining_footage = max(self.footage.get() - sum(loadout["footage"].get() for loadout in self.loadouts), 0)
+        used_footage = total_footage - remaining_footage
+
+        # Pie chart for joints
+        axs[0].pie([remaining_joints, used_joints], labels=['Remaining', 'Used'], autopct='%1.1f%%', colors=['#4CAF50', '#FF5722'], startangle=90)
+        axs[0].set_title('Joints')
+
+        # Pie chart for footage
+        axs[1].pie([remaining_footage, used_footage], labels=['Remaining', 'Used'], autopct='%1.1f%%', colors=['#2196F3', '#FFC107'], startangle=90)
+        axs[1].set_title('Footage')
+
+        for ax in axs:
+            ax.axis('equal')  # Equal aspect ratio ensures the pie chart is a circle
+
+        canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack()
