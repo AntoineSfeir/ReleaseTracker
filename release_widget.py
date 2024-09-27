@@ -1,60 +1,66 @@
 import tkinter as tk
 from tkinter import ttk  # Themed widgets
 
-
 class ReleaseCard(tk.Frame):
     def __init__(self, parent, release_number, date, joints, footage, on_remove):
-        super().__init__(
-            parent, padx=10, pady=10, bd=2, relief="groove", bg="#ffffff"
-        )  # Add border and background color
+        super().__init__(parent, padx=10, pady=10, bd=2, relief="groove", bg="#ffffff")
+        
         self.release_number = tk.StringVar(value=release_number)
         self.date = tk.StringVar(value=date)
         self.joints = tk.IntVar(value=joints)
         self.footage = tk.DoubleVar(value=footage)
         self.loadouts = []
 
-        # Create release card layout with grid
+        # Create release card layout with grid and store Entry widgets as instance variables
         tk.Label(self, text="Release Number:", font=("Arial", 12), bg="#ffffff").grid(
             row=0, column=0, padx=5, pady=5, sticky="w"
         )
-        tk.Entry(
+        self.release_number_entry = tk.Entry(
             self, textvariable=self.release_number, font=("Arial", 12), width=25
-        ).grid(row=0, column=1, padx=5, pady=5)
+        )
+        self.release_number_entry.grid(row=0, column=1, padx=5, pady=5)
 
         tk.Label(self, text="Date:", font=("Arial", 12), bg="#ffffff").grid(
             row=1, column=0, padx=5, pady=5, sticky="w"
         )
-        tk.Entry(self, textvariable=self.date, font=("Arial", 12), width=25).grid(
-            row=1, column=1, padx=5, pady=5
-        )
+        self.date_entry = tk.Entry(self, textvariable=self.date, font=("Arial", 12), width=25)
+        self.date_entry.grid(row=1, column=1, padx=5, pady=5)
 
         tk.Label(self, text="Total Joints:", font=("Arial", 12), bg="#ffffff").grid(
             row=2, column=0, padx=5, pady=5, sticky="w"
         )
-        tk.Entry(self, textvariable=self.joints, font=("Arial", 12), width=25).grid(
-            row=2, column=1, padx=5, pady=5
-        )
+        self.joints_entry = tk.Entry(self, textvariable=self.joints, font=("Arial", 12), width=25)
+        self.joints_entry.grid(row=2, column=1, padx=5, pady=5)
 
         tk.Label(self, text="Total Footage:", font=("Arial", 12), bg="#ffffff").grid(
             row=3, column=0, padx=5, pady=5, sticky="w"
         )
-        tk.Entry(self, textvariable=self.footage, font=("Arial", 12), width=25).grid(
-            row=3, column=1, padx=5, pady=5
-        )
+        self.footage_entry = tk.Entry(self, textvariable=self.footage, font=("Arial", 12), width=25)
+        self.footage_entry.grid(row=3, column=1, padx=5, pady=5)
 
-        # Remaining joints and footage
+        # Bind field changes to the validation function
+        self.release_number_entry.bind("<FocusOut>", lambda event: self.validate_fields())
+        self.date_entry.bind("<FocusOut>", lambda event: self.validate_fields())
+        self.joints_entry.bind("<FocusOut>", lambda event: self.validate_fields())
+        self.footage_entry.bind("<FocusOut>", lambda event: self.validate_fields())
+
+        # Info Label to display format hints
+        self.info_label = tk.Label(self, text="", font=("Arial", 10), fg="red", bg="#ffffff")
+        self.info_label.grid(row=4, column=0, columnspan=2)
+
+        # Remaining joints and footage labels
         self.remaining_joints_label = tk.Label(
             self, text="Remaining Joints: ", font=("Arial", 12, "bold"), bg="#ffffff"
         )
         self.remaining_joints_label.grid(
-            row=4, column=0, padx=5, pady=5, sticky="w", columnspan=2
+            row=5, column=0, padx=5, pady=5, sticky="w", columnspan=2
         )
 
         self.remaining_footage_label = tk.Label(
             self, text="Remaining Footage: ", font=("Arial", 12, "bold"), bg="#ffffff"
         )
         self.remaining_footage_label.grid(
-            row=5, column=0, padx=5, pady=5, sticky="w", columnspan=2
+            row=6, column=0, padx=5, pady=5, sticky="w", columnspan=2
         )
 
         # Buttons
@@ -66,7 +72,8 @@ class ReleaseCard(tk.Frame):
             width=15,
             bg="#4CAF50",
             fg="white",
-        ).grid(row=6, column=0, padx=5, pady=5)
+        ).grid(row=7, column=0, padx=5, pady=5)
+
         tk.Button(
             self,
             text="Remove Release",
@@ -75,14 +82,17 @@ class ReleaseCard(tk.Frame):
             width=15,
             bg="red",
             fg="white",
-        ).grid(row=6, column=1, padx=5, pady=5)
+        ).grid(row=7, column=1, padx=5, pady=5)
 
         # Loadouts area
         self.loadouts_frame = tk.Frame(self, bg="#ffffff")
-        self.loadouts_frame.grid(row=7, column=0, columnspan=2, pady=10)
+        self.loadouts_frame.grid(row=8, column=0, columnspan=2, pady=10)
 
         # Initialize remaining values
         self.update_remaining_values()
+
+    # Other methods unchanged
+
 
     def add_loadout(
         self, date="", joints=0, footage=0.0, remaining_joints=0, remaining_footage=0.0
@@ -237,6 +247,48 @@ class ReleaseCard(tk.Frame):
             }
             for loadout in self.loadouts
         ]
+    
+    def validate_fields(self):
+        # Validate each field and highlight if invalid
+        valid = True
+        self.info_label.config(text="")  # Reset the info label
+
+        # Validate release number (alphanumeric)
+        if not re.match(r'^[a-zA-Z0-9]+$', self.release_number.get()):
+            self.release_number_entry.config(bg="red")
+            valid = False
+        else:
+            self.release_number_entry.config(bg="white")
+
+        # Validate date (MM/DD/YYYY)
+        if not re.match(r'^\d{2}/\d{2}/\d{4}$', self.date.get()):
+            self.date_entry.config(bg="red")
+            valid = False
+        else:
+            self.date_entry.config(bg="white")
+
+        # Validate joints (integer)
+        try:
+            joints = int(self.joints.get())
+            self.joints_entry.config(bg="white")
+        except ValueError:
+            self.joints_entry.config(bg="red")
+            valid = False
+
+        # Validate footage (float)
+        try:
+            footage = float(self.footage.get())
+            self.footage_entry.config(bg="white")
+        except ValueError:
+            self.footage_entry.config(bg="red")
+            valid = False
+
+        # Display format info if invalid fields are found
+        if not valid:
+            self.info_label.config(text="Invalid format: Release Number (alphanumeric), Date (MM/DD/YYYY), Joints (integer), Footage (float)")
+        else:
+            self.info_label.config(text="")  # Clear the info label if all fields are valid
+
 
     def update_remaining_values(self):
         total_loadout_joints = 0
