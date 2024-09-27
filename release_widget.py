@@ -239,14 +239,25 @@ class ReleaseCard(tk.Frame):
         ]
 
     def update_remaining_values(self):
-        # Calculate total loadout joints and footage up to each loadout
         total_loadout_joints = 0
         total_loadout_footage = 0.0
 
         # Iterate through each loadout and update the remaining joints/footage progressively
         for loadout in self.loadouts:
-            total_loadout_joints += loadout["joints"].get()
-            total_loadout_footage += loadout["footage"].get()
+            try:
+                # Safely get the joints value, use 0 if it's empty or invalid
+                joints_value = loadout["joints"].get()
+                joints_value = int(joints_value) if joints_value else 0
+                total_loadout_joints += joints_value
+
+                # Safely get the footage value, use 0.0 if it's empty or invalid
+                footage_value = loadout["footage"].get()
+                footage_value = float(footage_value) if footage_value else 0.0
+                total_loadout_footage += footage_value
+            except (ValueError, TclError):
+                # If there's an error in conversion (e.g., non-numeric values), use default
+                total_loadout_joints += 0
+                total_loadout_footage += 0.0
 
             # Calculate the remaining joints and footage for this specific loadout
             remaining_joints = self.joints.get() - total_loadout_joints
@@ -271,3 +282,4 @@ class ReleaseCard(tk.Frame):
 
         self.remaining_joints_label.config(text=f"Remaining Joints: {final_remaining_joints}")
         self.remaining_footage_label.config(text=f"Remaining Footage: {final_remaining_footage:.2f}")
+

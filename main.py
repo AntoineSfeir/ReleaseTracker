@@ -171,7 +171,7 @@ class ReleaseTrackerApp(tk.Tk):
                 writer = csv.writer(file)
                 writer.writerows(csv_data)
             messagebox.showinfo("Success", f"Data saved to {file_path}")
-
+        
     def load_from_csv(self):
         # Load the data from a CSV file
         file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
@@ -187,6 +187,8 @@ class ReleaseTrackerApp(tk.Tk):
                 self.releases.clear()
 
                 for row in reader:
+                    # Ensure row has enough columns, pad with empty strings if necessary
+                    row += [""] * (9 - len(row))  # Pad the row to ensure it has 9 values
                     (
                         release_number,
                         date,
@@ -199,6 +201,7 @@ class ReleaseTrackerApp(tk.Tk):
                         remaining_footage,
                     ) = row
 
+                    # Add the release or update the current one
                     if (
                         current_release is None
                         or release_number != current_release.release_number.get()
@@ -207,16 +210,23 @@ class ReleaseTrackerApp(tk.Tk):
                             release_number, date, int(joints), float(footage)
                         )
 
+                    # Add loadout if there is loadout data
                     if loadout_date:
                         current_release.add_loadout(
                             loadout_date,
-                            int(loadout_joints),
-                            float(loadout_footage),
-                            int(remaining_joints),
-                            float(remaining_footage),
+                            int(loadout_joints) if loadout_joints else 0,
+                            float(loadout_footage) if loadout_footage else 0.0,
+                            int(remaining_joints) if remaining_joints else 0,
+                            float(remaining_footage) if remaining_footage else 0.0,
                         )
 
+                # After all loadouts are loaded, explicitly update the remaining values
+                for release_card in self.releases:
+                    release_card.update_remaining_values()
+
             messagebox.showinfo("Success", "Releases loaded from CSV!")
+
+
 
 
 if __name__ == "__main__":
